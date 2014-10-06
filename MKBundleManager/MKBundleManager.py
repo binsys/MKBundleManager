@@ -819,7 +819,7 @@ class MKBundleManager():
 #--------------------------------------------------------------------------
 # Plugin
 #--------------------------------------------------------------------------
-class idapatcher_t(plugin_t):
+class MKBundleManager_t(plugin_t):
 
 	flags = idaapi.PLUGIN_UNL
 	comment = "MK Bundle Manager."
@@ -853,7 +853,7 @@ class idapatcher_t(plugin_t):
 	    
 
 def PLUGIN_ENTRY():
-	return idapatcher_t()
+	return MKBundleManager_t()
 
 #--------------------------------------------------------------------------
 # Script / Testing
