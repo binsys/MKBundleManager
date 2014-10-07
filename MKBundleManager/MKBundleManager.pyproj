@@ -5,13 +5,20 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>76b600dc-d645-4535-841d-0d37a1895135</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MKBundleManager.py</StartupFile>
+    <StartupFile>D:\Project\My\20140607_Xamarin\Code\Xamarin\Xamarin.BundleTool\bin\Debug\20140822\Mac\mtouch-64.i64</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>MKBundleManager</Name>
     <RootNamespace>MKBundleManager</RootNamespace>
+    <PublishUrl>D:\Tools\Crack\DASM\IDA\IDA65\IDA65\plugins</PublishUrl>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments />
+    <InterpreterPath>D:\Tools\Crack\DASM\IDA\IDA65\IDA65\idaq64.exe</InterpreterPath>
+    <InterpreterArguments />
+    <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
+    <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

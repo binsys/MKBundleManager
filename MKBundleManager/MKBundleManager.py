@@ -1,23 +1,23 @@
-#!/usr/bin/env python
-# coding=gbk
+ï»¿#!/usr/bin/env python
+# coding=utf-8
 # by BinSys <binsys@163.com>
 
-# Ö§³Ö mtouch mtouch-64 mtouch.exe mandroid.exe ½â°ü
+# æ”¯æŒ mtouch mtouch-64 mtouch.exe mandroid.exe è§£åŒ…
 
 # Readme
 
-# 1. ½«²å¼şÎÄ¼ş MKBundleManager.py ·ÅÈë IDA Pro µÄ plugins Ä¿Â¼
-# 2. ÓÃIDA´ò¿ª´ı·ÖÎöÎÄ¼ş£¬µÈ´ı·ÖÎöÍê±Ï(×óÏÂ½Ç×´Ì¬À¸µÄ AU: idel)
-# 3. IDA ²Ëµ¥À¸ µã»÷ View -> Open subviews -> Bundled Assembly Manager
-# 4. ÔÚ Bundled Assembly Manager ´°¿ÚÖĞ¿É¼û³ÌĞò¼¯ÁĞ±í
-# 5. Ñ¡ÔñÒªĞŞ¸ÄµÄÎÄ¼şÓÃÓÒ¼ü²Ëµ¥ÄÚ µ¼³öÈ«²¿ÎÄ¼ş »òÕß µ¼³öÎÄ¼ş ÃüÁîµ¼³öµ½Ö¸¶¨Î»ÖÃ
-# 6. ÎÄ¼şĞŞ¸ÄÍê±ÏºóÓÃÓÒ¼ü²Ëµ¥ÄÚ Ìæ»»ÎÄ¼ş ÃüÁî Ìæ»»ĞŞ¸ÄºóµÄÎÄ¼ş
-# 7. »áÔÚÎ»ÓÚÔ­³ÌĞòËùÔÚÄ¿Â¼ÄÚÓÃÔ­ÎÄ¼şÃû+ÈÕÆÚÊ±¼äÃüÃûÉú³ÉÌæ»»ºóµÄ´ò°üÎÄ¼ş
+# 1. å°†æ’ä»¶æ–‡ä»¶ MKBundleManager.py æ”¾å…¥ IDA Pro çš„ plugins ç›®å½•
+# 2. ç”¨IDAæ‰“å¼€å¾…åˆ†ææ–‡ä»¶ï¼Œç­‰å¾…åˆ†æå®Œæ¯•(å·¦ä¸‹è§’çŠ¶æ€æ çš„ AU: idel)
+# 3. IDA èœå•æ  ç‚¹å‡» View -> Open subviews -> Bundled Assembly Manager
+# 4. åœ¨ Bundled Assembly Manager çª—å£ä¸­å¯è§ç¨‹åºé›†åˆ—è¡¨
+# 5. é€‰æ‹©è¦ä¿®æ”¹çš„æ–‡ä»¶ç”¨å³é”®èœå•å†… å¯¼å‡ºå…¨éƒ¨æ–‡ä»¶ æˆ–è€… å¯¼å‡ºæ–‡ä»¶ å‘½ä»¤å¯¼å‡ºåˆ°æŒ‡å®šä½ç½®
+# 6. æ–‡ä»¶ä¿®æ”¹å®Œæ¯•åç”¨å³é”®èœå•å†… æ›¿æ¢æ–‡ä»¶ å‘½ä»¤ æ›¿æ¢ä¿®æ”¹åçš„æ–‡ä»¶
+# 7. ä¼šåœ¨ä½äºåŸç¨‹åºæ‰€åœ¨ç›®å½•å†…ç”¨åŸæ–‡ä»¶å+æ—¥æœŸæ—¶é—´å‘½åç”Ÿæˆæ›¿æ¢åçš„æ‰“åŒ…æ–‡ä»¶
 
 # Note:
-# ¿ÉÄÜ»á´æÔÚÎÊÌâ£¬Çë¿´IDAµÄÊä³ö´°¿Ú»ñÈ¡ÏêÏ¸³ö´íĞÅÏ¢
-# .Net ³ÌĞò¼¯µÄĞŞ¸Ä¿ÉÓÃ Ìæ»»ÎÄ¼şRadate .NET Reflector + Reflexil ²å¼ş
-# µ±ĞŞ¸ÄºóµÄÎÄ¼ş±»Ñ¹Ëõºó´óÓÚÔ­Ê¼ÎÄ¼şµÄÑ¹ËõÊı¾İ´óĞ¡Ê±ÎŞ·¨Ìæ»»£¬ÕâÊ±£¬ÇëÓÃReflexilÉ¾³ıĞŞ¸ÄºóµÄ³ÌĞò¼¯µÄÈßÓàILÖ¸Áî£¬¼õÉÙ³ÌĞò¼¯´óĞ¡
+# å¯èƒ½ä¼šå­˜åœ¨é—®é¢˜ï¼Œè¯·çœ‹IDAçš„è¾“å‡ºçª—å£è·å–è¯¦ç»†å‡ºé”™ä¿¡æ¯
+# .Net ç¨‹åºé›†çš„ä¿®æ”¹å¯ç”¨ æ›¿æ¢æ–‡ä»¶Radate .NET Reflector + Reflexil æ’ä»¶
+# å½“ä¿®æ”¹åçš„æ–‡ä»¶è¢«å‹ç¼©åå¤§äºåŸå§‹æ–‡ä»¶çš„å‹ç¼©æ•°æ®å¤§å°æ—¶æ— æ³•æ›¿æ¢ï¼Œè¿™æ—¶ï¼Œè¯·ç”¨Reflexilåˆ é™¤ä¿®æ”¹åçš„ç¨‹åºé›†çš„å†—ä½™ILæŒ‡ä»¤ï¼Œå‡å°‘ç¨‹åºé›†å¤§å°
 
 
 
@@ -354,7 +354,7 @@ class MKBundleTool():
 
 
 
-	#PythonÓïÑÔ: Python Cookbook: ±ÈÏµÍ³×Ô´øµÄ¸ü¼ÓÓÑºÃµÄmakedirº¯Êı
+	#Pythonè¯­è¨€: Python Cookbook: æ¯”ç³»ç»Ÿè‡ªå¸¦çš„æ›´åŠ å‹å¥½çš„makedirå‡½æ•°
 	#from: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/82465
 	def _mkdir(self, newdir):
 		"""works the way a good mkdir should :)
@@ -388,7 +388,7 @@ class MKBundleTool():
 
 		compressedstream = StringIO.StringIO(Data)  
 		gziper = gzip.GzipFile(fileobj=compressedstream)    
-		data2 = gziper.read()   # ¶ÁÈ¡½âÑ¹ËõºóÊı¾İ
+		data2 = gziper.read()   # è¯»å–è§£å‹ç¼©åæ•°æ®
 
 		f = open(Path, 'wb')
 		f.write(data2)
@@ -470,7 +470,7 @@ class MKBundleTool():
 		input_file_dir = os.path.dirname(BundleFilePath)
 		input_file_fullname = os.path.basename(BundleFilePath) 
 		input_file_name,input_file_extname = os.path.splitext(input_file_fullname)
-		#·ÖÀëÀ©Õ¹Ãû£ºos.path.splitext(r"c:\python\hello.py") --> ("c:\\python\\hello",
+		#åˆ†ç¦»æ‰©å±•åï¼šos.path.splitext(r"c:\python\hello.py") --> ("c:\\python\\hello",
 		#".py")
 
 
@@ -485,7 +485,7 @@ class MKBundleTool():
 
 
 		fp = open(BundleFilePath,"rb")
-		data = fp.read() #¶Á³öÎÄ¼şÄÚÈİ
+		data = fp.read() #è¯»å‡ºæ–‡ä»¶å†…å®¹
 		
 		fp.close()
 
@@ -499,7 +499,7 @@ class MKBundleTool():
 
 		
 		
-		#data ²»¿É¸ü¸ÄÔªËØ£¬ÊÇ¹Ì¶¨µÄ,±ØĞë×ª³É¿É¶ÔÔªËØ²Ù×÷µÄlist
+		#data ä¸å¯æ›´æ”¹å…ƒç´ ï¼Œæ˜¯å›ºå®šçš„,å¿…é¡»è½¬æˆå¯å¯¹å…ƒç´ æ“ä½œçš„list
 		data = list(data)
 
 
@@ -511,7 +511,7 @@ class MKBundleTool():
 		#	print Exception,":",e
 
 
-		#range(m, n)ÕâÀï£¬range()º¯Êı²úÉúµÄÊÇÒ»¸ö´Ó mÖÁn-1µÄÕûÊıÁĞ±í
+		#range(m, n)è¿™é‡Œï¼Œrange()å‡½æ•°äº§ç”Ÿçš„æ˜¯ä¸€ä¸ªä» mè‡³n-1çš„æ•´æ•°åˆ—è¡¨
 
 
 		#update FileSize
@@ -534,8 +534,8 @@ class MKBundleTool():
 			pass
 
 		fp2 = open(output_file_fullpath,"wb")
-		#°ÑdataµÄlist×ªÎªstr²¢Ğ´ÈëÎÄ¼ş
-		fp2.write(''.join(data))#ÖØĞ´
+		#æŠŠdataçš„listè½¬ä¸ºstrå¹¶å†™å…¥æ–‡ä»¶
+		fp2.write(''.join(data))#é‡å†™
 		fp2.close()
 
 
@@ -544,15 +544,15 @@ class MKBundleTool():
 class ReplaceFileForm(Form):
 	def __init__(self,bundleFile,impFile):
 		Form.__init__(self,
-r"""BUTTON YES* Ìæ»»
-BUTTON CANCEL È¡Ïû
-ÇëÑ¡ÔñÎÄ¼ş£¨ÎÄ¼şÑ¹ËõºóÊı¾İ´óĞ¡±ØĞëĞ¡ÓÚÌæ»»Ç°Ñ¹ËõºóÊı¾İ´óĞ¡£©
+r"""BUTTON YES* æ›¿æ¢
+BUTTON CANCEL å–æ¶ˆ
+è¯·é€‰æ‹©æ–‡ä»¶ï¼ˆæ–‡ä»¶å‹ç¼©åæ•°æ®å¤§å°å¿…é¡»å°äºæ›¿æ¢å‰å‹ç¼©åæ•°æ®å¤§å°ï¼‰
 
 {FormChangeCb}
-<##Ñ¡Ôñ±»´ò°üµÄÎÄ¼ş:{bundleFile}>
-<##Ñ¡ÔñĞŞ¸ÄºóµÄÎÄ¼ş:{impFile}>
+<##é€‰æ‹©è¢«æ‰“åŒ…çš„æ–‡ä»¶:{bundleFile}>
+<##é€‰æ‹©ä¿®æ”¹åçš„æ–‡ä»¶:{impFile}>
 
-""", {  'bundleFile': Form.FileInput(open=True,value=bundleFile),
+""".decode('utf-8').encode(sys.getfilesystemencoding()), {  'bundleFile': Form.FileInput(open=True,value=bundleFile),
 		'impFile': Form.FileInput(open=True,value=impFile),
 
 		'FormChangeCb': Form.FormChangeCb(self.OnFormChange),
@@ -577,14 +577,14 @@ BUTTON CANCEL È¡Ïû
 class SaveItemsToDirForm(Form):
 	def __init__(self,defaultpath):
 		Form.__init__(self,
-r"""BUTTON YES* ±£´æ
-BUTTON CANCEL È¡Ïû
-ÇëÑ¡ÔñÊä³öÄ¿Â¼
+r"""BUTTON YES* ä¿å­˜
+BUTTON CANCEL å–æ¶ˆ
+è¯·é€‰æ‹©è¾“å‡ºç›®å½•
 
 {FormChangeCb}
 
-<##Êä³öÄ¿Â¼:{impFile}>
-""", {
+<##è¾“å‡ºç›®å½•:{impFile}>
+""".decode('utf-8').encode(sys.getfilesystemencoding()), {
 		'impFile': Form.DirInput(value=defaultpath),
 
 		'FormChangeCb': Form.FormChangeCb(self.OnFormChange),
@@ -648,18 +648,18 @@ class BundledAssemblyManagerView(Choose2):
 
 
 		if self.cmd_Items_SaveAs == None:
-			self.cmd_Items_SaveAs = self.AddCommand("µ¼³öÈ«²¿ÎÄ¼ş...", flags = idaapi.CHOOSER_POPUP_MENU | idaapi.CHOOSER_NO_SELECTION, icon=139)
+			self.cmd_Items_SaveAs = self.AddCommand("å¯¼å‡ºå…¨éƒ¨æ–‡ä»¶...".decode('utf-8').encode(sys.getfilesystemencoding()), flags = idaapi.CHOOSER_POPUP_MENU | idaapi.CHOOSER_NO_SELECTION, icon=139)
 		
 		if self.cmd_Item_SaveAs == None:
-			self.cmd_Item_SaveAs = self.AddCommand("µ¼³öÎÄ¼ş...", flags = idaapi.CHOOSER_POPUP_MENU, icon=139)
+			self.cmd_Item_SaveAs = self.AddCommand("å¯¼å‡ºæ–‡ä»¶...".decode('utf-8').encode(sys.getfilesystemencoding()), flags = idaapi.CHOOSER_POPUP_MENU, icon=139)
 		
 		if self.cmd_Item_ReplaceBy == None:
-			self.cmd_Item_ReplaceBy = self.AddCommand("Ìæ»»ÎÄ¼ş...", flags = idaapi.CHOOSER_POPUP_MENU, icon=139)
+			self.cmd_Item_ReplaceBy = self.AddCommand("æ›¿æ¢æ–‡ä»¶...".decode('utf-8').encode(sys.getfilesystemencoding()), flags = idaapi.CHOOSER_POPUP_MENU, icon=139)
 
 		return True
 
 	def refreshitems(self):
-		print "refreshitems"
+		#print "refreshitems"
 		self.items_data = []
 		self.items = []
 		try:
@@ -790,12 +790,12 @@ class BundledAssemblyManagerView(Choose2):
 		return len(self.items)
 	
 	def OnRefresh(self, n):
-		print "OnRefresh"
+		#print "OnRefresh"
 		self.refreshitems()
 		return n
 
 	def OnActivate(self):
-		print "OnActivate"
+		#print "OnActivate"
 		self.refreshitems()
 
 class MKBundleManager():
@@ -899,6 +899,7 @@ def MKBundleManager_main():
 
 if __name__ == '__main__':
 	try:
+		
 		#print("Initialized MKBundleManager  %s (c) BinSys <binsys@163.com>" % MKBundleManager_VERSION)
 		#MKBundleManager_main() #for Developer only
 		pass
