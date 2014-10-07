@@ -22,7 +22,7 @@
 
 
 
-MKBundleManager_VERSION = "1.0"
+MKBundleManager_VERSION = "1.1"
 
 # IDA libraries
 import idaapi
@@ -178,6 +178,8 @@ class MKBundleTool():
 			print "Can't find BundledAssemblyListOffsetList!"
 			return
 
+		#print BundledAssemblyListOffsetList
+
 		BundledAssemblys = []
 		BundledAssemblyItemIndex = 0
 		for BundledAssemblyListOffset in BundledAssemblyListOffsetList:
@@ -185,6 +187,8 @@ class MKBundleTool():
 			BundledAssemblyItem.Index = BundledAssemblyItemIndex
 			BundledAssemblys.append(BundledAssemblyItem)
 			BundledAssemblyItemIndex += 1
+
+		#print BundledAssemblys
 
 		return BundledAssemblys
 
@@ -616,6 +620,8 @@ class BundledAssemblyManagerView(Choose2):
 		#self.popup_names = ["Insert", "Delete", "Edit", "Refresh"]
 		
 		self.icon = 47
+
+		self.tool = None
 		
 		self.items = []
 		self.items_data = []
@@ -625,16 +631,21 @@ class BundledAssemblyManagerView(Choose2):
 		self.cmd_Item_SaveAs = None
 		self.cmd_Item_ReplaceBy = None
 
+	def show(self):
+
 		try:
-			self.tool = MKBundleTool()
 			# Initialize/Refresh the view
 			self.refreshitems()
+			if self.Show() < 0: return False
+			#self.Refresh()
 		except:
 			traceback.print_exc()
+		
 
-	def show(self):
 		# Attempt to open the view
-		if self.Show() < 0: return False
+		
+
+
 
 		if self.cmd_Items_SaveAs == None:
 			self.cmd_Items_SaveAs = self.AddCommand("导出全部文件...", flags = idaapi.CHOOSER_POPUP_MENU | idaapi.CHOOSER_NO_SELECTION, icon=139)
@@ -648,48 +659,55 @@ class BundledAssemblyManagerView(Choose2):
 		return True
 
 	def refreshitems(self):
-
+		print "refreshitems"
 		self.items_data = []
 		self.items = []
 		try:
+			self.tool = MKBundleTool()
 			asms = self.tool.GetBundledAssemblyList()
+
+			for BundledAssemblyItem in asms:
+				#print BundledAssemblyItem
+			
+				#print("FileItemStructOffset:{:016X} FileNameOffset:{:016X}
+				#FileDataOffset:{:016X} FileSize:{:016X} FileCompressedSize:{:016X}
+				#IsGZip:{} FileName:{}"\
+				#.format( \
+				#BundledAssemblyItem.FileItemStructOffset , \
+				#BundledAssemblyItem.FileNameOffset,\
+				#BundledAssemblyItem.FileDataOffset,\
+				#BundledAssemblyItem.FileSize,\
+				#BundledAssemblyItem.FileCompressedSize,\
+				#BundledAssemblyItem.IsGZip,\
+				#BundledAssemblyItem.FileName))
+
+
+				if  self.tool.Is64Bit:
+					fstr = "0x%016X"
+				else:
+					fstr = "0x%08X"
+
+				self.items_data.append(BundledAssemblyItem)
+				self.items.append(["%d" % BundledAssemblyItem.Index,
+									fstr % BundledAssemblyItem.FileItemStructOffset,
+									fstr % BundledAssemblyItem.FileNameOffset,
+									fstr % BundledAssemblyItem.FileDataOffset,
+									fstr % BundledAssemblyItem.FileSize,
+									fstr % BundledAssemblyItem.FileSizeOffset,
+									fstr % BundledAssemblyItem.FileCompressedSizeOffset,
+									fstr % BundledAssemblyItem.FileCompressedSize,
+									BundledAssemblyItem.IsGZip,
+									BundledAssemblyItem.FileName])
+
 		except:
 			traceback.print_exc()
-	
-		for BundledAssemblyItem in asms:
-
-			
-			#print("FileItemStructOffset:{:016X} FileNameOffset:{:016X}
-			#FileDataOffset:{:016X} FileSize:{:016X} FileCompressedSize:{:016X}
-			#IsGZip:{} FileName:{}"\
-			#.format( \
-			#BundledAssemblyItem.FileItemStructOffset , \
-			#BundledAssemblyItem.FileNameOffset,\
-			#BundledAssemblyItem.FileDataOffset,\
-			#BundledAssemblyItem.FileSize,\
-			#BundledAssemblyItem.FileCompressedSize,\
-			#BundledAssemblyItem.IsGZip,\
-			#BundledAssemblyItem.FileName))
-
-
-			if  self.tool.Is64Bit:
-				fstr = "0x%016X"
-			else:
-				fstr = "0x%08X"
-
-			self.items_data.append(BundledAssemblyItem)
-			self.items.append(["%d" % BundledAssemblyItem.Index,
-								fstr % BundledAssemblyItem.FileItemStructOffset,
-								fstr % BundledAssemblyItem.FileNameOffset,
-								fstr % BundledAssemblyItem.FileDataOffset,
-								fstr % BundledAssemblyItem.FileSize,
-								fstr % BundledAssemblyItem.FileSizeOffset,
-								fstr % BundledAssemblyItem.FileCompressedSizeOffset,
-								fstr % BundledAssemblyItem.FileCompressedSize,
-								BundledAssemblyItem.IsGZip,
-								BundledAssemblyItem.FileName])
 
 	def OnCommand(self, n, cmd_id):
+
+
+		if self.tool == None:
+			return 1;
+
 		if cmd_id == self.cmd_Items_SaveAs:
 
 			OutputDir = '{}_{:%Y%m%d%H%M%S%f}'.format(GetInputFilePath(), datetime.now())
@@ -772,10 +790,12 @@ class BundledAssemblyManagerView(Choose2):
 		return len(self.items)
 	
 	def OnRefresh(self, n):
+		print "OnRefresh"
 		self.refreshitems()
 		return n
 
 	def OnActivate(self):
+		print "OnActivate"
 		self.refreshitems()
 
 class MKBundleManager():
@@ -784,7 +804,7 @@ class MKBundleManager():
 		
 		self.addmenu_item_ctxs = list()
 		self.bundledAssemblyManagerView = None
-		self.bundledAssemblyManagerView = BundledAssemblyManagerView()
+		#self.bundledAssemblyManagerView = BundledAssemblyManagerView()
 
 	#--------------------------------------------------------------------------
 	# Menu Items
@@ -814,8 +834,16 @@ class MKBundleManager():
 	
 	# BundledAssemblyManagerView View
 	def Show_BundledAssemblyManagerView(self):
-		self.bundledAssemblyManagerView.show()
 
+		try:
+			if not self.bundledAssemblyManagerView == None:
+				self.bundledAssemblyManagerView.Close()
+				self.bundledAssemblyManagerView = None
+
+			self.bundledAssemblyManagerView = BundledAssemblyManagerView()
+			self.bundledAssemblyManagerView.show()
+		except:
+			traceback.print_exc()
 #--------------------------------------------------------------------------
 # Plugin
 #--------------------------------------------------------------------------
@@ -846,11 +874,11 @@ class MKBundleManager_t(plugin_t):
 	
 	def run(self, arg):
 		global MKBundleManagerInstance
+		idc.Wait()
 		MKBundleManagerInstance.Show_BundledAssemblyManagerView()
 	
 	def term(self):
-	    pass
-	    
+		pass
 
 def PLUGIN_ENTRY():
 	return MKBundleManager_t()
@@ -871,7 +899,7 @@ def MKBundleManager_main():
 
 if __name__ == '__main__':
 	try:
-		print("Initialized MKBundleManager  %s (c) BinSys <binsys@163.com>" % MKBundleManager_VERSION)
+		#print("Initialized MKBundleManager  %s (c) BinSys <binsys@163.com>" % MKBundleManager_VERSION)
 		#MKBundleManager_main() #for Developer only
 		pass
 	except:
