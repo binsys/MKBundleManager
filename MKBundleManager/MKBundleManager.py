@@ -22,7 +22,7 @@
 
 
 
-MKBundleManager_VERSION = "1.1"
+MKBundleManager_VERSION = "1.2"
 
 # IDA libraries
 import idaapi
@@ -111,6 +111,8 @@ class BundledAssembly():
 		self.FileCompressedSize = 0
 		self.IsGZip = ""
 		self.FileDataCompressed = ""
+		self.IsCompressed = True
+		self.IsME = False
 
 		pass
 
@@ -145,29 +147,36 @@ class MKBundleTool():
 		print("Is64Bit:{}".format(self.Is64Bit))
 
 
-	def GetBundledAssemblyList(self):
+	def GetBundledAssemblyList(self,UseScreenEA = False):
 
-		StringEA = self.FindStringEA()
-		if StringEA == -1:
-			print "Can't find StringEA!"
-			return
-	
-		Func = self.FindUnFunction(StringEA)
-	
-		if not Func:
-			print "Can't find Func!"
-			return
+		if not UseScreenEA:
 
-		FuncName = idc.GetFunctionName(Func.startEA)
+
+			StringEA = self.FindStringEA()
+			if StringEA == -1:
+				print "Can't find StringEA!"
+				return
 	
-		print "Found Data Function:" + FuncName
+			Func = self.FindUnFunction(StringEA)
+	
+			if not Func:
+				print "Can't find Func!"
+				return
+
+			FuncName = idc.GetFunctionName(Func.startEA)
+	
+			print "Found Data Function:" + FuncName
 
 
 		
-		BundledAssemblyListOffsetsVA = self.FindBundledAssemblyListOffsetsVA(Func.startEA)
-		if not BundledAssemblyListOffsetsVA:
-			print "Can't find BundledAssemblyListOffsetsVA!"
-			return
+			BundledAssemblyListOffsetsVA = self.FindBundledAssemblyListOffsetsVA(Func.startEA)
+			if not BundledAssemblyListOffsetsVA:
+				print "Can't find BundledAssemblyListOffsetsVA!"
+				return
+		else:
+			BundledAssemblyListOffsetsVA = ScreenEA()
+
+
 	
 		print("BundledAssemblyListOffsetsVA:0x{:016X}".format(BundledAssemblyListOffsetsVA))
 
@@ -178,12 +187,27 @@ class MKBundleTool():
 			print "Can't find BundledAssemblyListOffsetList!"
 			return
 
+		if len(BundledAssemblyListOffsetList) > 2:
+			difflen = BundledAssemblyListOffsetList[1] - BundledAssemblyListOffsetList[0]
+		else:
+			difflen = 0
+			return None
+
+		if difflen == 16 or difflen == 32 or difflen == -16 or difflen == -32:
+			IsCompressed = True
+		else:
+			IsCompressed = False
+
+		print "IsCompressed:{}".format(IsCompressed)
+
+		#return None
+
 		#print BundledAssemblyListOffsetList
 
 		BundledAssemblys = []
 		BundledAssemblyItemIndex = 0
 		for BundledAssemblyListOffset in BundledAssemblyListOffsetList:
-			BundledAssemblyItem = self.MakeBundledAssemblyStruct(BundledAssemblyListOffset)
+			BundledAssemblyItem = self.MakeBundledAssemblyStruct(BundledAssemblyListOffset, IsCompressed)
 			BundledAssemblyItem.Index = BundledAssemblyItemIndex
 			BundledAssemblys.append(BundledAssemblyItem)
 			BundledAssemblyItemIndex += 1
@@ -278,7 +302,7 @@ class MKBundleTool():
 	
 
 	
-	def MakeBundledAssemblyStruct(self, FileItemStructOffset):
+	def MakeBundledAssemblyStruct(self, FileItemStructOffset, IsCompressed = True):
 
 
 		if self.Is64Bit == True:
@@ -308,22 +332,32 @@ class MKBundleTool():
 		FileSizeOffset = offset
 		offset+=addv
 	
+		if IsCompressed:
+			IsME = "N/A"
+			mf(offset)
+			FileCompressedSize = vf(offset)
+			FileCompressedSizeOffset = offset
+			offset+=addv
 	
+			IsGZip = ""
 	
-		mf(offset)
-		FileCompressedSize = vf(offset)
-		FileCompressedSizeOffset = offset
-		offset+=addv
+			FileDataCompressed = idc.GetManyBytes(FileDataOffset,3)
 	
-		IsGZip = ""
-	
-		FileDataCompressed = idc.GetManyBytes(FileDataOffset,3)
-	
-		b1,b2,b3 = struct.unpack('ccc', FileDataCompressed[0:3])
-		if b1 == '\x1f' and b2 == '\x8b' and b3 == '\x08':
-			IsGZip = "Y"
+			b1,b2,b3 = struct.unpack('ccc', FileDataCompressed[0:3])
+			if b1 == '\x1f' and b2 == '\x8b' and b3 == '\x08':
+				IsGZip = "Y"
+			else:
+				IsGZip = "N"
 		else:
-			IsGZip = "N"
+			IsME = ""
+			IsGZip = "N/A"
+			FileDataCompressed = idc.GetManyBytes(FileDataOffset,2)
+	
+			b1,b2 = struct.unpack('cc', FileDataCompressed[0:2])
+			if b1 == '\x4d' and b2 == '\x45':
+				IsME = "Y"
+			else:
+				IsME = "N"
 	
 		ba = BundledAssembly()
 		ba.FileItemStructOffset = FileItemStructOffset
@@ -332,9 +366,15 @@ class MKBundleTool():
 		ba.FileDataOffset = FileDataOffset
 		ba.FileSize = FileSize
 		ba.FileSizeOffset = FileSizeOffset
-		ba.FileCompressedSizeOffset = FileCompressedSizeOffset
-		ba.FileCompressedSize = FileCompressedSize
+		if IsCompressed:
+			ba.FileCompressedSizeOffset = FileCompressedSizeOffset
+			ba.FileCompressedSize = FileCompressedSize
 		ba.IsGZip = IsGZip
+		ba.IsME = IsME
+		if IsCompressed:
+			ba.IsCompressed = "Y"
+		else:
+			ba.IsCompressed = "N"
 		#ba.FileDataCompressed = FileDataCompressed
 
 		return ba
@@ -374,6 +414,7 @@ class MKBundleTool():
 			#print "_mkdir %s" % repr(newdir)
 			if tail:
 				os.mkdir(newdir)
+
 	def DecompressZLib(self, Data,Path):
 		
 		#compressedstream = StringIO.StringIO(Data)
@@ -381,8 +422,6 @@ class MKBundleTool():
 		f = open(Path, 'wb')
 		f.write(data2)
 		f.close()
-
-	
 
 	def DecompressGzipTo(self, Data,Path):
 
@@ -394,19 +433,27 @@ class MKBundleTool():
 		f.write(data2)
 		f.close()
 
-
 	def DecompressFileTo(self, FileItem,OutputDir):
 		
-		newpath = '{}\\{}'.format(OutputDir, FileItem.FileName)
-
-		FileDataCompressed = idc.GetManyBytes(FileItem.FileDataOffset,FileItem.FileCompressedSize)
-
-
-		if FileItem.IsGZip == "Y":
-			self.DecompressGzipTo(FileDataCompressed,newpath)
+		if FileItem.IsME == "Y":
+			extname = ".ME"
 		else:
-			self.DecompressZLib(FileDataCompressed,newpath)
+			extname = ""
 
+		newpath = '{}\\{}{}'.format(OutputDir, FileItem.FileName, extname)
+
+		if FileItem.IsCompressed == "Y":
+			FileDataCompressed = idc.GetManyBytes(FileItem.FileDataOffset,FileItem.FileCompressedSize)
+			if FileItem.IsGZip == "Y":
+				self.DecompressGzipTo(FileDataCompressed,newpath)
+			else:
+				self.DecompressZLib(FileDataCompressed,newpath)
+		else:
+			FileData = idc.GetManyBytes(FileItem.FileDataOffset,FileItem.FileSize)
+			f = open(newpath, 'wb')
+			f.write(FileData)
+			f.close()
+			pass
 
 	def CompressGzipToData(self, data):
 		buf = StringIO.StringIO() 
@@ -440,31 +487,45 @@ class MKBundleTool():
 		NewFileData = f.read()
 		f.close()
 
-	
-		if FileItem.IsGZip == "Y":
-			compresseddata = self.CompressGzipToData(NewFileData)
+
+		if FileItem.IsCompressed == "Y":
+			if FileItem.IsGZip == "Y":
+				compresseddata = self.CompressGzipToData(NewFileData)
+			else:
+				compresseddata = self.CompressZLibToData(NewFileData)
+
+			sizediff = FileItem.FileCompressedSize - len(compresseddata)
+			print "FileCompressedSize - compresseddata = 0x{:016X} - 0x{:016X} = 0x{:016X}".format(FileItem.FileCompressedSize,len(compresseddata),sizediff)
+
+			if sizediff < 0:
+				print "FileCompressedSize < compresseddata,can't replace!"
+				return
 		else:
-			compresseddata = self.CompressZLibToData(NewFileData)
+			compresseddata = NewFileData
+			sizediff = FileItem.FileSize - len(compresseddata)
+			print "FileSize - compresseddata = 0x{:016X} - 0x{:016X} = 0x{:016X}".format(FileItem.FileSize,len(compresseddata),sizediff)
 
-		sizediff = FileItem.FileCompressedSize - len(compresseddata)
+			if sizediff < 0:
+				print "FileSize < compresseddata,can't replace!"
+				return
 
 
-		print "FileCompressedSize - compresseddata = 0x{:016X} - 0x{:016X} = 0x{:016X}".format(FileItem.FileCompressedSize,len(compresseddata),sizediff)
-
-		if sizediff < 0:
-			print "FileCompressedSize < compresseddata,can't replace!"
-			return
 
 
 		FileSizeOffset = idaapi.get_fileregion_offset(FileItem.FileSizeOffset)
-		FileCompressedSizeOffset = idaapi.get_fileregion_offset(FileItem.FileCompressedSizeOffset)
+
+		if FileItem.IsCompressed == "Y":
+			FileCompressedSizeOffset = idaapi.get_fileregion_offset(FileItem.FileCompressedSizeOffset)
+
 		FileDataOffset = idaapi.get_fileregion_offset(FileItem.FileDataOffset)
 		#ea = idaapi.get_fileregion_ea(offset)
 
 		NewFileDataSize = len(NewFileData)
-		NewCompressedDataSize = len(compresseddata)
-
-		print "FileSizeOffset = 0x{:016X},FileCompressedSizeOffset = 0x{:016X},FileDataOffset = 0x{:016X}".format(FileSizeOffset,FileCompressedSizeOffset,FileDataOffset)
+		if FileItem.IsCompressed == "Y":
+			NewCompressedDataSize = len(compresseddata)
+			print "FileSizeOffset = 0x{:016X},FileCompressedSizeOffset = 0x{:016X},FileDataOffset = 0x{:016X}".format(FileSizeOffset,FileCompressedSizeOffset,FileDataOffset)
+		else:
+			print "FileSizeOffset = 0x{:016X},FileDataOffset = 0x{:016X}".format(FileSizeOffset,FileDataOffset)
 		
 
 		input_file_dir = os.path.dirname(BundleFilePath)
@@ -492,10 +553,12 @@ class MKBundleTool():
 
 		if self.Is64Bit == True:
 			NewFileDataSizeData = struct.pack("q",NewFileDataSize)
-			NewCompressedDataSizeData = struct.pack("q",NewCompressedDataSize)
+			if FileItem.IsCompressed == "Y":
+				NewCompressedDataSizeData = struct.pack("q",NewCompressedDataSize)
 		else:
 			NewFileDataSizeData = struct.pack("l",NewFileDataSize)
-			NewCompressedDataSizeData = struct.pack("l",NewCompressedDataSize)
+			if FileItem.IsCompressed == "Y":
+				NewCompressedDataSizeData = struct.pack("l",NewCompressedDataSize)
 
 		
 		
@@ -519,14 +582,20 @@ class MKBundleTool():
 			data[FileSizeOffset + i] = NewFileDataSizeData[i]
 
 		##update FileCompressedSize
-		for i in range(0, len(NewCompressedDataSizeData)):
-			data[FileCompressedSizeOffset + i] = NewCompressedDataSizeData[i]
+		if FileItem.IsCompressed == "Y":
+			for i in range(0, len(NewCompressedDataSizeData)):
+				data[FileCompressedSizeOffset + i] = NewCompressedDataSizeData[i]
 
 
 		##clear FileData
-		for i in range(0, FileItem.FileCompressedSize):
-			data[FileDataOffset + i] = chr(0x0)
-			pass
+		if FileItem.IsCompressed == "Y":
+			for i in range(0, FileItem.FileCompressedSize):
+				data[FileDataOffset + i] = chr(0x0)
+				pass
+		else:
+			for i in range(0, FileItem.FileSize):
+				data[FileDataOffset + i] = chr(0x0)
+				pass
 
 		##update FileData
 		for i in range(0, len(compresseddata)):
@@ -607,18 +676,22 @@ class BundledAssemblyManagerView(Choose2):
 	def __init__(self):
 		Choose2.__init__(self,
 			"Bundled Assembly Manager",
-			[["Index",                      4 | Choose2.CHCOL_DEC], 
-				["FileItemStructOffset",      10 | Choose2.CHCOL_HEX], 
-				["FileNameOffset",            10 | Choose2.CHCOL_HEX], 
-				["FileDataOffset",            10 | Choose2.CHCOL_HEX], 
-				["FileSize",                  10 | Choose2.CHCOL_HEX], 
-				["FileSizeOffset",            10 | Choose2.CHCOL_HEX], 
-				["FileCompressedSizeOffset",  10 | Choose2.CHCOL_HEX], 
-				["FileCompressedSize",        10 | Choose2.CHCOL_HEX], 
-				["IsGZip",                    18 | Choose2.CHCOL_PLAIN], 
-				["FileName",                  18 | Choose2.CHCOL_PLAIN]])
+			[
+				["Index",                      6 | Choose2.CHCOL_DEC], 
+				["FileItemStructOffset",      18 | Choose2.CHCOL_HEX], 
+				["FileNameOffset",            18 | Choose2.CHCOL_HEX], 
+				["FileDataOffset",            18 | Choose2.CHCOL_HEX], 
+				["FileSize",                  18 | Choose2.CHCOL_HEX], 
+				["FileSizeOffset",            18 | Choose2.CHCOL_HEX], 
+				["FileCompressedSizeOffset",  18 | Choose2.CHCOL_HEX], 
+				["FileCompressedSize",        18 | Choose2.CHCOL_HEX], 
+				["IsCompressed",              4  | Choose2.CHCOL_PLAIN], 
+				["IsGZip",                    4  | Choose2.CHCOL_PLAIN], 
+				["IsME",                      4  | Choose2.CHCOL_PLAIN], 
+				["FileName",                  18 | Choose2.CHCOL_PLAIN]
+			])
 		#self.popup_names = ["Insert", "Delete", "Edit", "Refresh"]
-		
+
 		self.icon = 47
 
 		self.tool = None
@@ -635,8 +708,8 @@ class BundledAssemblyManagerView(Choose2):
 
 		try:
 			# Initialize/Refresh the view
-			self.refreshitems()
-			if self.Show() < 0: return False
+			if self.refreshitems():
+				if self.Show() < 0: return False
 			#self.Refresh()
 		except:
 			traceback.print_exc()
@@ -663,9 +736,25 @@ class BundledAssemblyManagerView(Choose2):
 		self.items_data = []
 		self.items = []
 		try:
-			self.tool = MKBundleTool()
-			asms = self.tool.GetBundledAssemblyList()
 
+			#-1:cancel,0-no,1-ok
+			UseScreenEAInt = idc.AskYN(1,"是否自动获取数据位置?(否则使用ScreenEA)".decode('utf-8').encode(sys.getfilesystemencoding()))
+
+			if UseScreenEAInt == -1:
+				UseScreenEAInt = 1
+
+			if UseScreenEAInt == 1:
+				UseScreenEA = False
+			else:
+				UseScreenEA = True
+
+			print "UseScreenEA:{}".format(UseScreenEA)
+
+
+			self.tool = MKBundleTool()
+			asms = self.tool.GetBundledAssemblyList(UseScreenEA)
+			if not asms:
+				return False
 			for BundledAssemblyItem in asms:
 				#print BundledAssemblyItem
 			
@@ -687,6 +776,7 @@ class BundledAssemblyManagerView(Choose2):
 				else:
 					fstr = "0x%08X"
 
+
 				self.items_data.append(BundledAssemblyItem)
 				self.items.append(["%d" % BundledAssemblyItem.Index,
 									fstr % BundledAssemblyItem.FileItemStructOffset,
@@ -696,11 +786,15 @@ class BundledAssemblyManagerView(Choose2):
 									fstr % BundledAssemblyItem.FileSizeOffset,
 									fstr % BundledAssemblyItem.FileCompressedSizeOffset,
 									fstr % BundledAssemblyItem.FileCompressedSize,
+									BundledAssemblyItem.IsCompressed,
 									BundledAssemblyItem.IsGZip,
+									BundledAssemblyItem.IsME,
 									BundledAssemblyItem.FileName])
+			return True
 
 		except:
 			traceback.print_exc()
+			return False
 
 	def OnCommand(self, n, cmd_id):
 
@@ -899,7 +993,6 @@ def MKBundleManager_main():
 
 if __name__ == '__main__':
 	try:
-		
 		#print("Initialized MKBundleManager  %s (c) BinSys <binsys@163.com>" % MKBundleManager_VERSION)
 		#MKBundleManager_main() #for Developer only
 		pass
