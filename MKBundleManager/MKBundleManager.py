@@ -467,7 +467,9 @@ class MKBundleTool():
 		return compresseddata
 
 	def CompressZLibToData(self, data):
-		data2 = zlib.compress(data,9)
+		compressobj = zlib.compressobj(zlib.Z_BEST_COMPRESSION, zlib.DEFLATED, zlib.MAX_WBITS, 8 ,zlib.Z_DEFAULT_STRATEGY)
+		data2 = compressobj.compress(data)
+		data2 += compressobj.flush()
 		return data2
 
 	def ReplaceFile(self, FileItem,BundleFilePath,NewFilePath):
